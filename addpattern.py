@@ -19,18 +19,26 @@
 
 import sys
 import brother
+import Image
+import array
+
+##################
+TheImage = None
+
+def getimageprops(imgfile):
+    x = 0
+    y = 0
+
+
+##################
 
 version = '1.0'
 
-if len(sys.argv) < 2:
-    print 'Usage: %s file [patternnum]' % sys.argv[0]
-    print 'Dumps user programs (901-999) from brother data files'
+if len(sys.argv) < 3:
+    print 'Usage: %s brotherfile image.bmp' % sys.argv[0]
     sys.exit()
 
-if len(sys.argv) == 3:
-    patt = int(sys.argv[2])
-else:
-    patt = 0
+imgfile = sys.argv[2]
 
 bf = brother.brotherFile(sys.argv[1])
 
@@ -48,3 +56,54 @@ for i in range(99):
 if (patternbank == 100):
     print "sorry, no free banks!"
     exit
+
+# ok got a bank, now lets figure out how big this thing we want to insert is
+TheImage = Image.open(imgfile)
+TheImage.load()
+
+im_size = TheImage.size
+width = im_size[0]
+print "width:",width
+height = im_size[1]
+print "height:", height
+
+# debugging stuff here
+x = 0
+y = 0
+
+x = width - 1
+while x > 0:
+    value = TheImage.getpixel((x,y))
+    if value:
+        sys.stdout.write('* ')
+    else:
+        sys.stdout.write('  ')
+    #sys.stdout.write(str(value))
+    x = x-1
+    if x == 0: #did we hit the end of the line?
+        y = y+1
+        x = width - 1
+        print " "
+        if y == height:
+            break
+# debugging stuff done
+
+# create the program entry
+progentry = []
+progentry.append(0x1)  # is used
+progentry.append(0x0)  # no idea what this is
+progentry.append( (int(width / 100) << 4) | (int((width%100) / 10) & 0xF) )
+progentry.append( (int(width % 10) << 4) | (int(height / 100) & 0xF) )
+progentry.append( (int((height % 100)/10) << 4) | (int(height % 10) & 0xF) )
+
+# now we have to pick out a 'program name'
+patternnum = 901 # start with 901? i dunno
+for pat in pats:
+    if (pat["number"] >= patternnum):
+        patternnum = pat["number"] + 1
+
+#print patternnum
+progentry.append(int(patternnum / 100) & 0xF)
+progentry.append( (int((patternnum % 100)/10) << 4) | (int(patternnum % 10) & 0xF) )
+
+print "Program entry: ",map(hex, progentry)
