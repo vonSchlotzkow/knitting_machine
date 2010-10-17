@@ -20,6 +20,40 @@
 import sys
 import brother
 
+##########
+
+def roundeven(val):
+    return (val+(val%2))
+
+def roundeight(val):
+    if val % 8:
+        return val + (8-(val%8))
+    else:
+        return val
+
+def roundfour(val):
+    if val % 4:
+        return val + (4-(val%4))
+    else:
+        return val
+
+def nibblesPerRow(stitches):
+    # there are four stitches per nibble
+    # each row is nibble aligned
+    return(roundfour(stitches)/4)
+
+def bytesPerPattern(stitches, rows):
+    nibbs = rows * nibblesPerRow(stitches)
+    bytes = roundeven(nibbs)/2
+    return bytes
+
+def bytesForMemo(rows):
+    bytes = roundeven(rows)/2
+    return bytes
+
+##############
+
+
 version = '1.0'
 
 if len(sys.argv) < 2:
@@ -44,8 +78,8 @@ if patt == 0:
     print "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+"
 
     # first dump the 99 'pattern id' blocks
-    for i in range(100):
-        print "pattern bank",i
+    for i in range(99):
+        print "program entry",i
         # each block is 7 bytes
         bytenum = i*7
 
@@ -82,6 +116,49 @@ if patt == 0:
         prog10 = bf.getIndexedByte(bytenum)
         print "\t",hex(bytenum),": ",hex(prog10),"\t\t + ", (prog10>>4) * 10,"+",(prog10&0xF),")"
         bytenum += 1
+
+    print "============================================"
+    print "Program memory grows -up-"
+    # now we're onto data data
+
+    # dump the first program
+    pointer = 0x6DF      # this is the 'bottom' of the memory
+    for i in range(99):
+        # of course, not all patterns will get dumped
+        pattused = bf.getIndexedByte(i*7)
+        if (pattused != 1):
+            # :(
+            break
+        # otherwise its a valid pattern
+        print "pattern bank #", i
+        # calc pattern size
+        rows100 =  bf.getIndexedByte(i*7 + 2)
+        rows1 =  bf.getIndexedByte(i*7 + 3)
+        stitches10 =  bf.getIndexedByte(i*7 + 4)
+
+        rows = (rows100 >> 4)*100 + (rows100 & 0xF)*10 + (rows1 >> 4);
+        stitches = (rows1 & 0xF)*100 + (stitches10 >> 4)*10 + (stitches10 & 0xF)
+        print "rows = ", rows, "stitches = ", stitches
+#        print "total nibs per row = ", nibblesPerRow(stitches)
+
+        
+        # dump the memo data
+        print "memo length =",bytesForMemo(rows)
+        for i in range (bytesForMemo(rows)):
+            b = pointer - i
+            print "\t",hex(b),": ",hex(bf.getIndexedByte(b))
+        pointer -= bytesForMemo(rows)
+
+        print "pattern length = ", bytesPerPattern(stitches, rows)
+        for i in range (bytesPerPattern(stitches, rows)):
+            b = pointer - i
+            print "\t",hex(b),": ",hex(bf.getIndexedByte(b))
+        pointer -=  bytesPerPattern(stitches, rows)
+        
+    #for i in range (0x06DF, 99*7, -1):
+    #    print "\t",hex(i),": ",hex(bf.getIndexedByte(i))
+        
+        
 
 else:
     print 'Searching for pattern number %d' % patt
