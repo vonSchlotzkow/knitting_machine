@@ -39,6 +39,50 @@ if patt == 0:
     print 'Pattern   Stitches   Rows'
     for pat in pats:
         print '  %3d       %3d      %3d' % (pat["number"], pat["stitches"], pat["rows"])
+    print "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+"
+    print "Data file"
+    print "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+"
+
+    # first dump the 99 'pattern id' blocks
+    for i in range(100):
+        print "pattern bank",i
+        # each block is 7 bytes
+        bytenum = i*7
+
+        pattused = bf.getIndexedByte(bytenum)
+        print "\t",hex(bytenum),": ",hex(pattused),
+        if (pattused == 1):
+            print "\t(used)"
+        else:
+            print "\t(unused)"
+            print "\t-skipped-"
+            continue
+        bytenum += 1
+        
+        unk1 = bf.getIndexedByte(bytenum)
+        print "\t",hex(bytenum),": ",hex(unk1),"\t(unknown)"
+        bytenum += 1
+
+        rows100 =  bf.getIndexedByte(bytenum)
+        print "\t",hex(bytenum),": ",hex(rows100),"\t(rows = ", (rows100 >> 4)*100, " + ", (rows100 & 0xF)*10
+        bytenum += 1
+
+        rows1 =  bf.getIndexedByte(bytenum)
+        print "\t",hex(bytenum),": ",hex(rows1),"\t\t+ ", (rows1 >> 4), " stiches = ", (rows1 & 0xF)*100,"+"
+        bytenum += 1
+
+        stitches10 =  bf.getIndexedByte(bytenum)
+        print "\t",hex(bytenum),": ",hex(stitches10),"\t\t+ ", (stitches10 >> 4)*10, " +", (stitches10 & 0xF),")"
+        bytenum += 1
+
+        prog100 = bf.getIndexedByte(bytenum)
+        print "\t",hex(bytenum),": ",hex(prog100),"\t(unknown , prog# = ", (prog100&0xF) * 100,"+"
+        bytenum += 1
+
+        prog10 = bf.getIndexedByte(bytenum)
+        print "\t",hex(bytenum),": ",hex(prog10),"\t\t + ", (prog10>>4) * 10,"+",(prog10&0xF),")"
+        bytenum += 1
+
 else:
     print 'Searching for pattern number %d' % patt
     pats = bf.getPatterns(patt)
