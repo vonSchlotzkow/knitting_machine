@@ -152,7 +152,25 @@ if patt == 0:
         print "pattern length = ", bytesPerPattern(stitches, rows)
         for i in range (bytesPerPattern(stitches, rows)):
             b = pointer - i
-            print "\t",hex(b),": ",hex(bf.getIndexedByte(b))
+            print "\t",hex(b),": ",hex(bf.getIndexedByte(b)),
+            for j in range(8):
+                if (b & (1<<j)):
+                    print "*",
+                else:
+                    print " ",
+            print ""
+        
+        # print it out in nibbles per row?
+        for row in range(rows):
+            for nibs in range(nibblesPerRow(stitches)):
+                n = bf.getIndexedNibble(pointer, nibblesPerRow(stitches)*row + nibs)
+                print hex(n),
+                for j in range(8):
+                    if (n & (1<<j)):
+                        print "*",
+                    else:
+                        print " ",
+            print ""
         pointer -=  bytesPerPattern(stitches, rows)
         
     #for i in range (0x06DF, 99*7, -1):
