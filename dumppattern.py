@@ -154,7 +154,7 @@ if patt == 0:
             b = pointer - i
             print "\t",hex(b),": ",hex(bf.getIndexedByte(b)),
             for j in range(8):
-                if (b & (1<<j)):
+                if (bf.getIndexedByte(b) & (1<<j)):
                     print "*",
                 else:
                     print " ",
