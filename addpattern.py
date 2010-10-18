@@ -60,13 +60,15 @@ def bytesForMemo(rows):
 
 version = '1.0'
 
-if len(sys.argv) < 3:
-    print 'Usage: %s brotherfile image.bmp' % sys.argv[0]
+if len(sys.argv) < 4:
+    print 'Usage: %s oldbrotherfile image.bmp newbrotherfile' % sys.argv[0]
     sys.exit()
 
 imgfile = sys.argv[2]
 
 bf = brother.brotherFile(sys.argv[1])
+
+outfile = open(sys.argv[3], 'w')
 
 pats = bf.getPatterns()
 
@@ -182,3 +184,21 @@ for i in range (len(pattmemnibs) / 2):
 
 print map(hex, pattmem)
 # whew. 
+
+# now to insert this data into the file by creating a NEW file
+
+patternbankptr = patternbank*7
+
+# write old original patterns
+for i in range (patternbankptr):
+    # copy & paste this data
+    outfile.write(chr(bf.getIndexedByte(i)))
+
+# write the new pattern!@
+for i in range(7):
+    outfile.write(chr(progentry[i]))
+
+for i in range(patternbankptr+7, 2048):
+    outfile.write(chr(bf.getIndexedByte(i)))
+    
+outfile.close()
