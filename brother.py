@@ -22,7 +22,7 @@ import array
 #import os
 #import os.path
 #import string
-#from array import *
+from array import *
 
 __version__ = '1.0'
 
@@ -92,10 +92,10 @@ class brotherFile(object):
 
     def __init__(self, fn):
         self.dfn = None
-        self.verbose = False
+        self.verbose = True
         try:
             try:
-                self.df = open(fn, 'r+')
+                self.df = open(fn, 'rb+')     # YOU MUST HAVE BINARY FORMAT!!!
             except IOError:
                 # for now, read only
                 raise
@@ -118,6 +118,28 @@ class brotherFile(object):
     def getIndexedByte(self, index):
         return ord(self.data[index])
 
+    def setIndexedByte(self, index, b):
+        # python strings are mutable so we
+        # will convert the string to a char array, poke
+        # and convert back
+        dataarray = array('c')
+        dataarray.fromstring(self.data)
+
+        if self.Verbose:
+            print "* writing ", hex(b), "to", hex(index)
+        #print dataarray
+
+        # this is the actual edit
+        dataarray[index] = chr(b)
+
+        # save the new string. sure its not very memory-efficient
+        # but who cares?
+        self.data = dataarray.tostring()
+        
+    # handy for debugging
+    def getFullData(self):
+        return self.data
+
     def getIndexedNibble(self, offset, nibble):
         # nibbles is zero based
         bytes = nibble/2
@@ -128,7 +150,7 @@ class brotherFile(object):
             return l
 
     def getRowData(self, pattOffset, stitches, rownumber):
-        row=array.array('B')
+        row=array('B')
         nibspr = nibblesPerRow(stitches)
         startnib = nibspr * rownumber
         endnib = startnib + nibspr
@@ -190,18 +212,21 @@ class brotherFile(object):
             if self.verbose:
                 print '   Pattern %3d: %3d Rows, %3d Stitches - ' % (patno, rows, stitches)
                 print 'Unk = %d, Unknown = 0x%02X (%d)' % (unk, unknown, unknown)
-            if flag == 1:
+            if flag != 0:
                 # valid entry
                 memoff = pptr
+                print "Memo #",patno, "offset ", hex(memoff)
                 patoff = pptr -  bytesForMemo(rows)
+                print "Pattern #",patno, "offset ", hex(patoff)
                 pptr = pptr - bytesPerPatternAndMemo(stitches, rows)
+                print "Ending offset ", hex(pptr)
                 # TODO figure out how to calculate pattern length
                 #pptr = pptr - something
                 if patternNumber:
                     if patternNumber == patno:
-                        patlist.append({'number':patno, 'stitches':stitches, 'rows':rows, 'memo':memoff, 'pattern':patoff})
+                        patlist.append({'number':patno, 'stitches':stitches, 'rows':rows, 'memo':memoff, 'pattern':patoff, 'pattend':pptr})
                 else:
-                    patlist.append({'number':patno, 'stitches':stitches, 'rows':rows, 'memo':memoff, 'pattern':patoff})
+                    patlist.append({'number':patno, 'stitches':stitches, 'rows':rows, 'memo':memoff, 'pattern':patoff, 'pattend':pptr})
             else:
                 break
         return patlist
@@ -234,7 +259,7 @@ class brotherFile(object):
         list = self.getPatterns(patternNumber)
         if len(list) == 0:
             return None
-        memos = array.array('B')
+        memos = array('B')
         memoOff = list[0]['memo']
         rows = list[0]['rows']
         memlen = roundeven(rows)/2
@@ -330,19 +355,19 @@ class brotherFile(object):
 
     # these are hardcoded for now
     def unknownOne(self):
-        info = array.array('B')
+        info = array('B')
         for i in range(0x06E0, 0x06E5):
             info.append(ord(self.data[i]))
         return info
 
     def unknownMemoRange(self):
-        info = array.array('B')
+        info = array('B')
         for i in range(0x0731, 0x0787):
             info.append(ord(self.data[i]))
         return info
 
     def unknownEndRange(self):
-        info = array.array('B')
+        info = array('B')
         for i in range(0x07D0, 0x07E9):
             info.append(ord(self.data[i]))
         return info
