@@ -22,15 +22,41 @@ import brother
 import Image
 import array
 
-##################
 TheImage = None
 
-def getimageprops(imgfile):
-    x = 0
-    y = 0
-
-
 ##################
+
+def roundeven(val):
+    return (val+(val%2))
+
+def roundeight(val):
+    if val % 8:
+        return val + (8-(val%8))
+    else:
+        return val
+
+def roundfour(val):
+    if val % 4:
+        return val + (4-(val%4))
+    else:
+        return val
+
+def nibblesPerRow(stitches):
+    # there are four stitches per nibble
+    # each row is nibble aligned
+    return(roundfour(stitches)/4)
+
+def bytesPerPattern(stitches, rows):
+    nibbs = rows * nibblesPerRow(stitches)
+    bytes = roundeven(nibbs)/2
+    return bytes
+
+def bytesForMemo(rows):
+    bytes = roundeven(rows)/2
+    return bytes
+
+##############
+
 
 version = '1.0'
 
@@ -107,3 +133,52 @@ progentry.append(int(patternnum / 100) & 0xF)
 progentry.append( (int((patternnum % 100)/10) << 4) | (int(patternnum % 10) & 0xF) )
 
 print "Program entry: ",map(hex, progentry)
+
+# now to make the actual, yknow memo+pattern data
+
+# the memo seems to be always blank. i have no idea really
+pattentry = []
+for i in range(bytesForMemo(height)):
+    pattentry.append(0x0)
+
+# now for actual real live pattern data!
+pattmemnibs = []
+for r in range(height):
+    row = []  # we'll chunk in bits and then put em into nibbles
+    for s in range(width):
+        value = TheImage.getpixel((s,r))
+        if (value != 0):
+            row.append(1)
+        else:
+            row.append(0)
+    #print row
+    # turn it into nibz
+    for s in range(roundfour(width) / 4):
+        n = 0
+        for nibs in range(4):
+            #print "row size = ", len(row), "index = ",s*4+nibs
+
+            if (len(row) == (s*4+nibs)):
+                break       # padding!
+
+            
+            if (row[s*4 + nibs]):
+                n |= 1 << nibs
+        pattmemnibs.append(n)
+        print hex(n),
+    print
+
+
+if (len(pattmemnibs) % 2):
+    # odd nibbles, buffer to a byte
+    pattmemnibs.append(0x0)
+
+print len(pattmemnibs), "nibbles of data"
+
+# turn into bytes
+pattmem = []
+for i in range (len(pattmemnibs) / 2):
+    pattmem.append( pattmemnibs[i*2] | (pattmemnibs[i*2 + 1] << 4))
+
+print map(hex, pattmem)
+# whew. 
