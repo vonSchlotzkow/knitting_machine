@@ -198,7 +198,30 @@ for i in range (patternbankptr):
 for i in range(7):
     outfile.write(chr(progentry[i]))
 
-for i in range(patternbankptr+7, 2048):
+# now we have to figure out the -end- of the last pattern is
+endaddr = 0x6df
+
+for p in pats:
+    endaddr =  min(p['pattend'], endaddr)
+print "top address = ", hex(endaddr)
+beginaddr = endaddr - bytesForMemo(height) - len(pattmem) + 1
+print "end will be at ", hex(beginaddr)
+if beginaddr < 0x2B8:
+    print "sorry, this will colllide with the pattern entry data!"
+    exit
+
+for i in range(patternbankptr+7, beginaddr):
     outfile.write(chr(bf.getIndexedByte(i)))
+
+# dump the pattern data here
+for i in range(len(pattmem)):
+    outfile.write(chr(pattmem[len(pattmem)-i-1]))
+
+for i in range(bytesForMemo(height)):
+    outfile.write(chr(0))
+
+for i in range (endaddr, 2048):
+    outfile.write(chr(bf.getIndexedByte(i)))
+
     
 outfile.close()
