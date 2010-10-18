@@ -8,10 +8,10 @@ if len(sys.argv) != 2:
 
 
 
-infile = open(sys.argv[1], 'r')
+infile = open(sys.argv[1], 'rb')
 
-track0file = open("track0.dat", 'w')
-track1file = open("track1.dat", 'w')
+track0file = open("track0.dat", 'wb')
+track1file = open("track1.dat", 'wb')
 
 t0dat = infile.read(1024)
 t1dat = infile.read(1024)
