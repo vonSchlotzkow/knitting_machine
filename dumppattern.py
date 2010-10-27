@@ -89,8 +89,8 @@ if patt == 0:
             print "\t(used)"
         else:
             print "\t(unused)"
-            print "\t-skipped-"
-            continue
+            #print "\t-skipped-"
+            #continue
         bytenum += 1
         
         unk1 = bf.getIndexedByte(bytenum)
