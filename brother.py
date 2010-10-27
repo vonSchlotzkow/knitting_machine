@@ -125,7 +125,7 @@ class brotherFile(object):
         dataarray = array('c')
         dataarray.fromstring(self.data)
 
-        if self.Verbose:
+        if self.verbose:
             print "* writing ", hex(b), "to", hex(index)
         #print dataarray
 
