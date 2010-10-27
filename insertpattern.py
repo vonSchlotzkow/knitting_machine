@@ -60,13 +60,14 @@ def bytesForMemo(rows):
 
 version = '1.0'
 
-if len(sys.argv) < 4:
-    print 'Usage: %s oldbrotherfile image.bmp newbrotherfile' % sys.argv[0]
+if len(sys.argv) < 5:
+    print 'Usage: %s oldbrotherfile pattern# image.bmp newbrotherfile' % sys.argv[0]
     sys.exit()
 
-imgfile = sys.argv[2]
 
 bf = brother.brotherFile(sys.argv[1])
+pattnum = sys.argv[2]
+imgfile = sys.argv[3]
 
 
 pats = bf.getPatterns()
@@ -115,19 +116,23 @@ while x > 0:
             break
 # debugging stuff done
 
-# create the program entry
-progentry = []
-progentry.append(0x1)  # is used
-progentry.append(0x20)  # no idea what this is but dont make it 0x0
-progentry.append( (int(width / 100) << 4) | (int((width%100) / 10) & 0xF) )
-progentry.append( (int(width % 10) << 4) | (int(height / 100) & 0xF) )
-progentry.append( (int((height % 100)/10) << 4) | (int(height % 10) & 0xF) )
+# find the program entry
+thePattern = None
 
-# now we have to pick out a 'program name'
-patternnum = 901 # start with 901? i dunno
 for pat in pats:
-    if (pat["number"] >= patternnum):
-        patternnum = pat["number"] + 1
+    if (int(pat["number"]) == int(pattnum)):
+        #print "found it!"
+        thePattern = pat
+if (thePattern == None):
+    print "Pattern #",pattnum,"not found!"
+    exit(0)
+
+if (width != thePattern["rows"] or height != thePattern["stitches"]):
+    print "Pattern is the wrong size, the BMP is ",width,"x",height,"and the pattern is ",thePattern["rows"], thePattern["stitches"]
+    exit(0)
+
+print thePattern
+exit(1)
 
 #print patternnum
 progentry.append(int(patternnum / 100) & 0xF)
@@ -219,7 +224,7 @@ for i in range(len(pattmem)):
     endaddr -= 1
 
 # push the data to a file
-outfile = open(sys.argv[3], 'wb')
+outfile = open(sys.argv[4], 'wb')
 
 d = bf.getFullData()
 outfile.write(d)
