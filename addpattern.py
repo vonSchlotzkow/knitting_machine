@@ -68,7 +68,6 @@ imgfile = sys.argv[2]
 
 bf = brother.brotherFile(sys.argv[1])
 
-outfile = open(sys.argv[3], 'w')
 
 pats = bf.getPatterns()
 
@@ -119,7 +118,7 @@ while x > 0:
 # create the program entry
 progentry = []
 progentry.append(0x1)  # is used
-progentry.append(0x0)  # no idea what this is
+progentry.append(0x20)  # no idea what this is but dont make it 0x0
 progentry.append( (int(width / 100) << 4) | (int((width%100) / 10) & 0xF) )
 progentry.append( (int(width % 10) << 4) | (int(height / 100) & 0xF) )
 progentry.append( (int((height % 100)/10) << 4) | (int(height % 10) & 0xF) )
@@ -139,16 +138,16 @@ print "Program entry: ",map(hex, progentry)
 # now to make the actual, yknow memo+pattern data
 
 # the memo seems to be always blank. i have no idea really
-pattentry = []
+memoentry = []
 for i in range(bytesForMemo(height)):
-    pattentry.append(0x0)
+    memoentry.append(0x0)
 
 # now for actual real live pattern data!
 pattmemnibs = []
 for r in range(height):
     row = []  # we'll chunk in bits and then put em into nibbles
     for s in range(width):
-        value = TheImage.getpixel((s,r))
+        value = TheImage.getpixel((width-s-1,height-r-1))
         if (value != 0):
             row.append(1)
         else:
@@ -185,18 +184,16 @@ for i in range (len(pattmemnibs) / 2):
 print map(hex, pattmem)
 # whew. 
 
-# now to insert this data into the file by creating a NEW file
 
+# now to insert this data into the file 
+
+# where to place the pattern program entry
 patternbankptr = patternbank*7
 
-# write old original patterns
-for i in range (patternbankptr):
-    # copy & paste this data
-    outfile.write(chr(bf.getIndexedByte(i)))
-
-# write the new pattern!@
+# write the new pattern program
 for i in range(7):
-    outfile.write(chr(progentry[i]))
+    bf.setIndexedByte(patternbankptr+i, progentry[i])
+
 
 # now we have to figure out the -end- of the last pattern is
 endaddr = 0x6df
@@ -204,24 +201,26 @@ endaddr = 0x6df
 for p in pats:
     endaddr =  min(p['pattend'], endaddr)
 print "top address = ", hex(endaddr)
-beginaddr = endaddr - bytesForMemo(height) - len(pattmem) + 1
+
+beginaddr = endaddr - bytesForMemo(height) - len(pattmem) -1
 print "end will be at ", hex(beginaddr)
-if beginaddr < 0x2B8:
-    print "sorry, this will colllide with the pattern entry data!"
+
+if beginaddr <= 0x2B8:
+    print "sorry, this will collide with the pattern entry data!"
     exit
 
-for i in range(patternbankptr+7, beginaddr):
-    outfile.write(chr(bf.getIndexedByte(i)))
+# write the memo and pattern entry from the -end- to the -beginning- (up!)
+for i in range(len(memoentry)):
+    bf.setIndexedByte(endaddr, 0)
+    endaddr -= 1
 
-# dump the pattern data here
 for i in range(len(pattmem)):
-    outfile.write(chr(pattmem[len(pattmem)-i-1]))
+    bf.setIndexedByte(endaddr, pattmem[i])
+    endaddr -= 1
 
-for i in range(bytesForMemo(height)):
-    outfile.write(chr(0))
+# push the data to a file
+outfile = open(sys.argv[3], 'wb')
 
-for i in range (endaddr, 2048):
-    outfile.write(chr(bf.getIndexedByte(i)))
-
-    
+d = bf.getFullData()
+outfile.write(d)
 outfile.close()
