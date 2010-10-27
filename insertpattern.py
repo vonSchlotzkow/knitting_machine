@@ -72,19 +72,6 @@ imgfile = sys.argv[3]
 
 pats = bf.getPatterns()
 
-# find first unused pattern bank
-patternbank = 100
-for i in range(99):
-    bytenum = i*7
-    if (bf.getIndexedByte(bytenum) != 0x1):
-        print "first unused pattern bank #", i
-        patternbank = i
-        break
-
-if (patternbank == 100):
-    print "sorry, no free banks!"
-    exit
-
 # ok got a bank, now lets figure out how big this thing we want to insert is
 TheImage = Image.open(imgfile)
 TheImage.load()
@@ -131,15 +118,8 @@ if (width != thePattern["rows"] or height != thePattern["stitches"]):
     print "Pattern is the wrong size, the BMP is ",width,"x",height,"and the pattern is ",thePattern["rows"], thePattern["stitches"]
     exit(0)
 
-print thePattern
-exit(1)
 
 #print patternnum
-progentry.append(int(patternnum / 100) & 0xF)
-progentry.append( (int((patternnum % 100)/10) << 4) | (int(patternnum % 10) & 0xF) )
-
-print "Program entry: ",map(hex, progentry)
-
 # now to make the actual, yknow memo+pattern data
 
 # the memo seems to be always blank. i have no idea really
@@ -192,23 +172,12 @@ print map(hex, pattmem)
 
 # now to insert this data into the file 
 
-# where to place the pattern program entry
-patternbankptr = patternbank*7
-
-# write the new pattern program
-for i in range(7):
-    bf.setIndexedByte(patternbankptr+i, progentry[i])
-
-
 # now we have to figure out the -end- of the last pattern is
 endaddr = 0x6df
 
-for p in pats:
-    endaddr =  min(p['pattend'], endaddr)
-print "top address = ", hex(endaddr)
-
-beginaddr = endaddr - bytesForMemo(height) - len(pattmem) -1
-print "end will be at ", hex(beginaddr)
+beginaddr = thePattern["pattend"]
+endaddr = beginaddr + bytesForMemo(height) + len(pattmem)
+print "beginning will be at ", hex(beginaddr), "end at", hex(endaddr)
 
 if beginaddr <= 0x2B8:
     print "sorry, this will collide with the pattern entry data!"
