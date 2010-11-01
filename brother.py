@@ -92,7 +92,7 @@ class brotherFile(object):
 
     def __init__(self, fn):
         self.dfn = None
-        self.verbose = True
+        self.verbose = False
         try:
             try:
                 self.df = open(fn, 'rb+')     # YOU MUST HAVE BINARY FORMAT!!!
@@ -215,11 +215,14 @@ class brotherFile(object):
             if flag != 0:
                 # valid entry
                 memoff = pptr
-                print "Memo #",patno, "offset ", hex(memoff)
+                if self.verbose:
+                    print "Memo #",patno, "offset ", hex(memoff)
                 patoff = pptr -  bytesForMemo(rows)
-                print "Pattern #",patno, "offset ", hex(patoff)
+                if self.verbose:
+                     print "Pattern #",patno, "offset ", hex(patoff)
                 pptr = pptr - bytesPerPatternAndMemo(stitches, rows)
-                print "Ending offset ", hex(pptr)
+                if self.verbose:
+                     print "Ending offset ", hex(pptr)
                 # TODO figure out how to calculate pattern length
                 #pptr = pptr - something
                 if patternNumber:
