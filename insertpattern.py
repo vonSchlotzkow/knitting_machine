@@ -95,8 +95,8 @@ if (thePattern == None):
     print "Pattern #",pattnum,"not found!"
     exit(0)
 
-if (width != thePattern["rows"] or height != thePattern["stitches"]):
-    print "Pattern is the wrong size, the BMP is ",width,"x",height,"and the pattern is ",thePattern["rows"], "x", thePattern["stitches"]
+if (height != thePattern["rows"] or width != thePattern["stitches"]):
+    print "Pattern is the wrong size, the BMP is ",height,"x",width,"and the pattern is ",thePattern["rows"], "x", thePattern["stitches"]
     exit(0)
 
 # debugging stuff here
