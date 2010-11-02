@@ -60,9 +60,9 @@ def bytesForMemo(rows):
 
 version = '1.0'
 
-if len(sys.argv) < 4:
-    print 'Usage: %s oldbrotherfile image.bmp newbrotherfile' % sys.argv[0]
-    sys.exit()
+
+print "I dont work, sorry!"
+sys.exit()
 
 imgfile = sys.argv[2]
 
