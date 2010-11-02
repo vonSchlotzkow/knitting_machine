@@ -82,6 +82,23 @@ print "width:",width
 height = im_size[1]
 print "height:", height
 
+
+
+# find the program entry
+thePattern = None
+
+for pat in pats:
+    if (int(pat["number"]) == int(pattnum)):
+        #print "found it!"
+        thePattern = pat
+if (thePattern == None):
+    print "Pattern #",pattnum,"not found!"
+    exit(0)
+
+if (width != thePattern["rows"] or height != thePattern["stitches"]):
+    print "Pattern is the wrong size, the BMP is ",width,"x",height,"and the pattern is ",thePattern["rows"], "x", thePattern["stitches"]
+    exit(0)
+
 # debugging stuff here
 x = 0
 y = 0
@@ -103,23 +120,6 @@ while x > 0:
             break
 # debugging stuff done
 
-# find the program entry
-thePattern = None
-
-for pat in pats:
-    if (int(pat["number"]) == int(pattnum)):
-        #print "found it!"
-        thePattern = pat
-if (thePattern == None):
-    print "Pattern #",pattnum,"not found!"
-    exit(0)
-
-if (width != thePattern["rows"] or height != thePattern["stitches"]):
-    print "Pattern is the wrong size, the BMP is ",width,"x",height,"and the pattern is ",thePattern["rows"], thePattern["stitches"]
-    exit(0)
-
-
-#print patternnum
 # now to make the actual, yknow memo+pattern data
 
 # the memo seems to be always blank. i have no idea really
@@ -146,27 +146,25 @@ for r in range(height):
 
             if (len(row) == (s*4+nibs)):
                 break       # padding!
-
             
             if (row[s*4 + nibs]):
                 n |= 1 << nibs
         pattmemnibs.append(n)
-        print hex(n),
-    print
+        #print hex(n),
 
 
 if (len(pattmemnibs) % 2):
     # odd nibbles, buffer to a byte
     pattmemnibs.append(0x0)
 
-print len(pattmemnibs), "nibbles of data"
+#print len(pattmemnibs), "nibbles of data"
 
 # turn into bytes
 pattmem = []
 for i in range (len(pattmemnibs) / 2):
     pattmem.append( pattmemnibs[i*2] | (pattmemnibs[i*2 + 1] << 4))
 
-print map(hex, pattmem)
+#print map(hex, pattmem)
 # whew. 
 
 
@@ -177,7 +175,7 @@ endaddr = 0x6df
 
 beginaddr = thePattern["pattend"]
 endaddr = beginaddr + bytesForMemo(height) + len(pattmem)
-print "beginning will be at ", hex(beginaddr), "end at", hex(endaddr)
+#print "beginning will be at ", hex(beginaddr), "end at", hex(endaddr)
 
 if beginaddr <= 0x2B8:
     print "sorry, this will collide with the pattern entry data!"
