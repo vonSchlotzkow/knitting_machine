@@ -501,7 +501,7 @@ class PDDemulator():
             # see whether to send data
             go = self.readchar()
             if go == '\r':
-                self.write(id)
+                self.writebytes(id)
 
         elif cmd == 'R':
             # Followed by Physical Sector Number PSN and Logical Sector Number LSN
@@ -627,7 +627,10 @@ emu = PDDemulator(sys.argv[1])
 emu.open(cport=sys.argv[2])
 
 print 'Ready!'
-while 1:
-    emu.handleRequests()
+try:
+    while 1:
+        emu.handleRequests()
+except (KeyboardInterrupt):
+    break
 
 emu.close()
