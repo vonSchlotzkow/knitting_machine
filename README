@@ -1,4 +1,13 @@
+Please see the Changelog file for the latest changes
+
 These files are related to the Brother KH-930E knitting machine, and other similar models.
+
+=== NOTE ===
+
+The emulator script was named PDDemulate-1.0.py, and the instructions in a lor of forums for using it have that name.
+The script has been renamed, and is now simply PDDemulate.py.
+
+============
 
 The files in the top directory are the ones used for the knitting project that Becky Stern and Limor Fried did:
 
