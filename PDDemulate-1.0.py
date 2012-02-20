@@ -183,8 +183,8 @@ class DiskSector():
             raise IOError
         self.id = newid
         self.writeIdFile()
-        #print 'Wrote New ID: ',
-        #self.dumpId()
+        print 'Wrote New ID: ',
+        self.dumpId()
         return
 
     def dumpId(self):
@@ -290,7 +290,7 @@ class PDDemulator():
                 raise IOError
         return
 
-    def close(self, foo):
+    def close(self):
         if self.noserial is not False:
             if ser:
                 ser.close()
@@ -393,7 +393,7 @@ class PDDemulator():
 
     def handleOpModeRequest(self):
         req = ord(self.ser.read())
-        #print 'Request: 0X%02X' % req
+        print 'Request: 0X%02X' % req
         if req == 0x08:
             # Change to FDD emulation mode (no data returned)
             inbuf = self.readOpmodeRequest(req)
@@ -439,7 +439,7 @@ class PDDemulator():
             inc = self.readchar()
             if inc == 'Z':
                 # definitely!
-                #print 'Detected Opmode Request in FDC Mode, switching to OpMode'
+                print 'Detected Opmode Request in FDC Mode, switching to OpMode'
                 self.FDCmode = False
                 self.handleOpModeRequest()
 
@@ -487,7 +487,7 @@ class PDDemulator():
             # returns ID data, not sector data
             info = self.readFDDRequest()
             psn, lsn = self.getPsnLsn(info)
-            #print 'FDC Read ID Section %d' % psn
+            print 'FDC Read ID Section %d' % psn
             
             try:
                 id = self.disk.getSectorID(psn)
@@ -507,7 +507,7 @@ class PDDemulator():
             # Followed by Physical Sector Number PSN and Logical Sector Number LSN
             info = self.readFDDRequest()
             psn, lsn = self.getPsnLsn(info)
-            #print 'FDC Read one Logical Sector %d' % psn
+            print 'FDC Read one Logical Sector %d' % psn
             
             try:
                 sd = self.disk.readSector(psn, lsn)
@@ -533,7 +533,7 @@ class PDDemulator():
             # start at Sector 0 or at the PSN sector
             info = self.readFDDRequest()
             psn, lsn = self.getPsnLsn(info)
-            #print 'FDC Search ID Section %d' % psn
+            print 'FDC Search ID Section %d' % psn
 
             # Now we must send status (success)
             self.writebytes('00' + '%02X' % psn + '0000')
@@ -543,7 +543,7 @@ class PDDemulator():
             # we receive 12 bytes here
             # compare with the specified sector (formatted is apparently zeros)
             id = self.readsomechars(12)
-            #print 'checking ID for sector %d' % psn
+            print 'checking ID for sector %d' % psn
 
             try:
                 status = self.disk.findSectorID(psn, id)
@@ -552,7 +552,7 @@ class PDDemulator():
                 status = '30000000'
                 raise
 
-            #print 'returning %s' % status
+            print 'returning %s' % status
                     # guessing - doc is unclear, but says that S always ends in 0000
                     # MATCH 00000000
                     # MATCH 02000000
@@ -575,7 +575,7 @@ class PDDemulator():
             # for data to be written, then after write, send status again
             info = self.readFDDRequest()
             psn, lsn = self.getPsnLsn(info)
-            #print 'FDC Write ID section %d' % psn
+            print 'FDC Write ID section %d' % psn
 
             self.writebytes('00' + '%02X' % psn + '0000')
 
@@ -593,7 +593,7 @@ class PDDemulator():
         elif cmd == 'W' or cmd == 'X':
             info = self.readFDDRequest()
             psn, lsn = self.getPsnLsn(info)
-            #print 'FDC Write logical sector %d' % psn
+            print 'FDC Write logical sector %d' % psn
 
             # Now we must send status (success)
             self.writebytes('00' + '%02X' % psn + '0000')
@@ -626,11 +626,11 @@ emu = PDDemulator(sys.argv[1])
 
 emu.open(cport=sys.argv[2])
 
-print 'Ready!'
+print 'PDDtmulate Version 1.1 Ready!'
 try:
     while 1:
         emu.handleRequests()
 except (KeyboardInterrupt):
-    break
+    pass
 
 emu.close()
