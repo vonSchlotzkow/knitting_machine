@@ -47,7 +47,6 @@ class PDD1():
         return
 
     def open(self, cport='/dev/ttyUSB0', rate = 9600, par = 'N', stpbts=1, tmout=1, xx=0):
-        print "Open enter"
         #self.ser = serial.Serial(port = cport, baudrate = rate, parity = par, stopbits = stpbts, timeout = tmout, xonxoff=0)
         self.ser = serial.Serial(port = cport, baudrate = rate, parity = par, stopbits = stpbts, timeout = tmout, xonxoff=0, rtscts=1, dsrdtr=0)
         if self.ser == None:
@@ -56,13 +55,6 @@ class PDD1():
         self.commtimeout = tmout
         # Sometimes on powerup there are some characters in the buffer, purge them
         self.dumpchars()
-        #foo = 0
-        #while self.ser.inWaiting():
-        #    bar = self.ser.read(1)
-        #    foo = foo+1
-        #if self.verbose and foo:
-        #    print 'During open %d characters were read from the serial port and discarded' % foo
-        print "Open Exit"
         return
 
     def close(self):
@@ -82,24 +74,8 @@ class PDD1():
                 break
         return
 
-    def readsomechars(self):
-        if True:
-            waiting = self.ser.inWaiting()
-            print "readsomechars - waiting chars: ", waiting
-            print "CTS = ", self.ser.getCTS()
-            #time.sleep(1)
-            #waiting = 1
-            while  waiting == 0:
-                print "CTS = ", self.ser.getCTS()
-                if self.verbose:
-                    print 'waiting'
-                time.sleep(.1)
-                waiting = self.ser.inWaiting()
-
-            if self.verbose:
-                print "readsomechars: waiting = ", waiting
-
-        sch = self.ser.read(waiting)
+    def getFDCresponse(self):
+        sch = self.ser.read(8)
         return sch
 
     def readchar(self):
@@ -121,20 +97,20 @@ class PDD1():
         sum = sum ^ 0xFF
         return chr(sum)
 
-    def __commandResponse(self, command):
-        if self.verbose:
-            pcmd = command.strip()
-            print 'writing command ===> <%s>' % pcmd
-        self.dumpchars()
-        ds_string = command
-        cs = self.calcChecksum(ds_string)
-        ds_string = ds_string + cs
-        print "cR sending . . ."
-        print dump(ds_string)
-        self.writebytes(ds_string)
-        response = self.readsomechars()
-        print 'Command got a response of ', response
-        return response
+#    def __commandResponse(self, command):
+#        if self.verbose:
+#            pcmd = command.strip()
+#            print 'writing command ===> <%s>' % pcmd
+#        self.dumpchars()
+#        ds_string = command
+#        cs = self.calcChecksum(ds_string)
+#        ds_string = ds_string + cs
+#        print "cR sending . . ."
+#        print dump(ds_string)
+#        self.writebytes(ds_string)
+#        response = self.readsomechars()
+#        print 'Command got a response of ', response
+#        return response
 
     def __FDCcommandResponse(self, command):
         if self.verbose:
@@ -144,7 +120,7 @@ class PDD1():
         print "FDC Sending . . ."
         print dump(command)
         self.writebytes(command)
-        response = self.readsomechars()
+        response = self.getFDCresponse()
         print 'FDC Command got a response of ', response
         return response
     #
