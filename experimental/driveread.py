@@ -76,6 +76,12 @@ class PDD1():
 
     def getFDCresponse(self):
         sch = self.ser.read(8)
+        if self.verbose:
+            print "Got FDC response:"
+            if (sch[0] == '0') and (sch[1] == '0'):
+                print "  SUCCESS"
+                print "  Physical Sector = %c%c" % (sch[2], sch[3])
+                print "  Logical Sector  = %c%c%c%c" %  (sch[4], sch[5],sch[6], sch[7])
         return sch
 
     def readchar(self):
@@ -85,7 +91,6 @@ class PDD1():
         return inc
             
     def writebytes(self, bytes):
-        print "CTS = ", self.ser.getCTS()
         self.ser.write(bytes)
         return
 
@@ -115,37 +120,31 @@ class PDD1():
     def __FDCcommandResponse(self, command):
         if self.verbose:
             pcmd = command.strip()
-            print 'writing FDC command ===> <%s>' % pcmd
+            print '-------------------------------------\nwriting FDC command ===> <%s>' % pcmd
         self.dumpchars()
-        print "FDC Sending . . ."
-        print dump(command)
         self.writebytes(command)
         response = self.getFDCresponse()
-        print 'FDC Command got a response of ', response
         return response
     #
     # Begin commands
     #
 
-    def EnterOpMode(self):
+    def EnterFDCMode(self):
         if False:
             command = "ZZ" + chr(0x08) + chr(0)
             cs = self.calcChecksum(command)
             command = command + cs + "\r"
         else:
             command = "ZZ" + chr(0x08) + chr(0) + chr(0xF7) + "\r"
-        print "Sending: . . ."
-        print dump(command)
+        if self.verbose:
+            print "Entering FDC Mode, sending:"
+            print dump(command),
         self.writebytes(command)
         # There's no response to this command, so allow time to complete
         time.sleep(.010)
-
-    def getDriveStatus(self):
-        command = "ZZ" + chr(0x07) + chr(0)
-        print "Sending request for Drive status: . . ."
-        print dump(command)
-        result = self.__commandResponse(command)
-        return result
+        if self.verbose:
+            print "Done entering FDC Mode\n"
+        return
 
     def checkDeviceCondition(self):
         command = "D\r"
@@ -172,16 +171,13 @@ drive = PDD1()
 #print 'open'
 drive.open(cport=sys.argv[1], tmout = None)
 
-drive.EnterOpMode()
+drive.EnterFDCMode()
 #stat = drive.format() # FDC Mode
 stat = drive.checkDeviceCondition() # FDC Mode
 stat = drive.sendS()
 
-# OR
-#stat = drive.getDriveStatus() # NOT FDC mode
-
 print 'Status = '
-print dump(stat)
+print dump(stat),
 
 
 drive.close()
