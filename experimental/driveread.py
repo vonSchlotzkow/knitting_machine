@@ -82,13 +82,29 @@ class PDD1():
                 print "  SUCCESS"
                 print "  Physical Sector = %c%c" % (sch[2], sch[3])
                 print "  Logical Sector  = %c%c%c%c" %  (sch[4], sch[5],sch[6], sch[7])
+            else:
+                print "  ***** ERROR ***** : %c%c" %  (sch[0], sch[1])
+                print "  Physical Sector = %c%c" % (sch[2], sch[3])
+                print "  Logical Sector  = %c%c%c%c" %  (sch[4], sch[5],sch[6], sch[7])
         return sch
 
-    def readchar(self):
-        inc = ''
-        while len(inc) == 0:
-            inc = self.ser.read()
-        return inc
+    def isSuccess(self, FDCstatus):
+        if self.verbose:
+            print "isSuccess checking:"
+            print dump(FDCstatus)
+        if len(FDCstatus) != 8:
+            print "Status Bad Len"
+            return False
+        for sb in FDCstatus[0:2]:
+            if sb != '0':
+                return False
+        return True
+
+#    def readchar(self):
+#        inc = ''
+#        while len(inc) == 0:
+#            inc = self.ser.read()
+#        return inc
             
     def writebytes(self, bytes):
         self.ser.write(bytes)
@@ -126,7 +142,7 @@ class PDD1():
         response = self.getFDCresponse()
         return response
     #
-    # Begin commands
+    # Begin Op Mode commands
     #
 
     def EnterFDCMode(self):
@@ -146,18 +162,171 @@ class PDD1():
             print "Done entering FDC Mode\n"
         return
 
-    def checkDeviceCondition(self):
+    #
+    # Begin FDC mode commands
+    #
+
+    def FDCChangeMode(self, mode = '1'):
+        """
+        Change the disk drive mode. Default to changing from FDC
+        emulation mode back to Operational Mode.
+        """
+        command = "M " + mode
+        result = self.__FDCcommandResponse(command)
+        if not self.isSuccess(result):
+            raise IOError
+        return
+
+    def FDCcheckDeviceCondition(self):
+        """
+        Send the 'D' command and return the result
+        """
         command = "D\r"
-        return self.__FDCcommandResponse(command)
+        result = self.__FDCcommandResponse(command)
+        if self.verbose:
+            # third byte:
+            # 30 - Normal
+            # 45 - Door open or no disk
+            # 32 - write protected
+            print "third byte = 0x%X" % ord(result[2])
+        return result
 
-    def format(self):
-        command = "F5\r"
-        return self.__FDCcommandResponse(command)
+    def FDCformat(self, sectorSize='5', verify=True):
+        """
+        Format the floppy with the requested 
+        """
+        if verify:
+            command = "F"
+        else:
+            command = "G"
+        command = command + sectorSize + "\r"
+        result = self.__FDCcommandResponse(command)
+        if not self.isSuccess(result):
+            raise IOError
+        return
 
-    def sendS(self):
-        command = "S\r"
-        return self.__FDCcommandResponse(command)
+    def FDCreadIdSection(self, psn = '0'):
+        """
+        Read the ID section of a physical sector, and return
+        the ID, which should be 12 bytes long
+        """
+        if self.verbose:
+            print "FDCreadIdSection: Enter"
+        command = "A " + psn + "\r"
+        result = self.__FDCcommandResponse(command)
+        #if not self.isSuccess(result):
+        #    raise IOError
+        result =  self.__FDCcommandResponse("\r")
+        if self.verbose:
+            print "FDCreadIdSection data:"
+            print dump(result)
+            print "FDCreadIdSection: Exit"
+        return result
 
+    def FDCreadSector(self, psn = '0', lsn = '1'):
+        """
+        Read the data from a logical sector.
+        psn is Physical sector number, in the range 0-79
+        lsn is the logical sector  number, in range of 1
+        to the max for the physical sector size
+        """
+        if self.verbose:
+            print "FDCreadSector: Enter"
+        command = "R " + psn + ","+ lsn + "\r"
+        result = self.__FDCcommandResponse(command)
+        #if not self.isSuccess(result):
+        #    raise IOError
+        result =  self.__FDCcommandResponse("\r")
+        if self.verbose:
+            print "FDCreadSector data:"
+            print dump(result)
+            print "FDCreadSector: Exit"
+        return result
+
+    def FDCsearchIdSection(self, data, psn = '0'):
+        """
+        Compare the data to the sector ID
+        psn is Physical sector number, in the range 0-79
+        Data length must be 12 bytes
+        """
+        if len(data) != 12:
+            raise ValueError("ID data must be 12 characters long")
+        if self.verbose:
+            print "FDCsearchIdSection: Enter"
+        command = "S" + psn + "\r"
+        result = self.__FDCcommandResponse(command)
+        if not self.isSuccess(result):
+            raise IOError
+        if self.verbose:
+            print "FDCsearchIdSection data:"
+            print dump(data)
+        result =  self.__FDCcommandResponse(data)
+        if self.verbose:
+            print "FDCsearchIdSection: Exit"
+        print "NOT SURE WHAT WE EXPECT HERE"
+        print "FDCsearchIdSection status is:"
+        print dump(result)
+        if not self.isSuccess(result):
+            raise IOError
+        return
+
+    def FDCwriteIdSection(self, data, psn = '0', verify = True):
+        """
+        Write the data to the sector ID
+        psn is Physical sector number, in the range 0-79
+        Data length must be 12 bytes
+        """
+        if len(data) != 12:
+            raise ValueError("ID data must be 12 characters long")
+        if verify:
+            command = "B"
+        else:
+            command = "C"
+        if self.verbose:
+            print "FDCwriteIdSection: Enter"
+        command = command + psn + "\r"
+        result = self.__FDCcommandResponse(command)
+        if not self.isSuccess(result):
+            raise IOError
+        if self.verbose:
+            print "FDCwriteIdSection data:"
+            print dump(data)
+        result =  self.__FDCcommandResponse(data)
+        if self.verbose:
+            print "FDCwriteIdSection: Exit"
+        if not self.isSuccess(result):
+            raise IOError
+        return
+
+#W     Write log sector w/verify   
+#      (two stages - second stage send data to be written)
+#X     Write log sector w/o vfy    
+#      (two stages - second stage send data to be written)
+    def FDCwriteSector(self, data, psn = '0', lsn = '1', verify = True):
+        """
+        Write the data to the sector
+        psn is Physical sector number, in the range 0-79, defaults to 0
+        lsn is logical sector number, defaults to 1
+        """
+        if verify:
+            command = "W"
+        else:
+            command = "X"
+        if self.verbose:
+            print "FDCwriteSector: Enter"
+        command = command + psn + "," + lsn + "\r"
+        result = self.__FDCcommandResponse(command)
+        if not self.isSuccess(result):
+            raise IOError
+        if self.verbose:
+            print "FDCwriteSector data:"
+            print dump(data)
+        result =  self.__FDCcommandResponse(data)
+        if self.verbose:
+            print "FDCwriteSector: Exit"
+        if not self.isSuccess(result):
+            raise IOError
+        return
 
 # meat and potatos here
 
@@ -172,12 +341,15 @@ drive = PDD1()
 drive.open(cport=sys.argv[1], tmout = None)
 
 drive.EnterFDCMode()
-#stat = drive.format() # FDC Mode
-stat = drive.checkDeviceCondition() # FDC Mode
-stat = drive.sendS()
-
-print 'Status = '
-print dump(stat),
-
+#stat = drive.FDCformat() # FDC Mode
+#stat = drive.FDCcheckDeviceCondition() # FDC Mode
+#stat = drive.FDCsendS()
+for sector in range(79):
+    sid = drive.FDCreadIdSection(psn = '%d' % sector)
+    print "Sector ID: "
+    print dump(sid)
+    data = drive.FDCreadSector(psn = '%d' % sector)
+    print "Sector Data: "
+    print dump(data)
 
 drive.close()
