@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import sys
-#import os
+import os
 #import os.path
 #import string
 import time
@@ -28,26 +28,55 @@ from FDif import PDD1, dump
 
 # meat and potatos here
 
-if len(sys.argv) < 2:
-    print 'Usage: %s serialdevice' % sys.argv[0]
+if len(sys.argv) < 3:
+    print 'Usage: %s serialdevice dirname' % sys.argv[0]
+    print
+    print 'Reads all sectors and sector IDs from a disk and'
+    print 'copies it into the directory specified.'
+    print 'The format is the same as PDDemulate uses.'
     sys.exit()
 
-#print 'Preparing . . . Please Wait'
+
+bdir = os.path.relpath(sys.argv[2])
+print "bdir = ", bdir
+if os.path.exists(bdir):
+    print "<%s> already exists, exiting . . ." % bdir
+    sys.exit()
+
+os.mkdir(bdir)
+
 drive = PDD1()
 
-#print 'open'
-drive.open(cport=sys.argv[1], tmout = None)
+drive.open(cport=sys.argv[1])
 
-drive.EnterFDCMode()
-#stat = drive.FDCformat() # FDC Mode
-#stat = drive.FDCcheckDeviceCondition() # FDC Mode
-#stat = drive.FDCsendS()
-for sector in range(2):
-    sid = drive.FDCreadIdSection(psn = '%d' % sector)
-    print "Sector ID: "
+for sn in range(80):
+    ifn = "%02d.id" % sn
+    dfn = "%02d.dat" % sn
+    Fid = open(os.path.join(bdir, ifn), 'w')
+    Fdata = open(os.path.join(bdir, dfn), 'w')
+
+    sid = drive.FDCreadIdSection(psn = '%d' % sn)
+    print "Sector %02d ID: " % sn
     print dump(sid)
-    data = drive.FDCreadSector(psn = '%d' % sector)
-    print "Sector Data: "
+    Fid.write(sid)
+
+    data = drive.FDCreadSector(psn = '%d' % sn)
+    print "Sector %02d Data: " % sn
     print dump(data)
+    Fdata.write(data)
+
+    Fid.close()
+    Fdata.close()
+
+    if sn % 2:
+        filenum =  ((sn-1)/2)+1
+        filename =  'file-%02d.dat' % filenum
+        # we wrote an odd sector, so create the
+        # associated file
+        fn1 = os.path.join(bdir, '%02d.dat' % (sn-1))
+        fn2 = os.path.join(bdir, '%02d.dat' % sn)
+        outfn =  os.path.join(bdir, filename)
+        cmd = 'cat %s %s > %s' % (fn1, fn2, outfn)
+        os.system(cmd)
 
 drive.close()
