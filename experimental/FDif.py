@@ -46,8 +46,7 @@ class PDD1():
     def __del__(self):
         return
 
-    def open(self, cport='/dev/ttyUSB0', rate = 9600, par = 'N', stpbts=1, tmout=1, xx=0):
-        #self.ser = serial.Serial(port = cport, baudrate = rate, parity = par, stopbits = stpbts, timeout = tmout, xonxoff=0)
+    def open(self, cport='/dev/ttyUSB0', rate = 9600, par = 'N', stpbts=1, tmout=None, xx=0):
         self.ser = serial.Serial(port = cport, baudrate = rate, parity = par, stopbits = stpbts, timeout = tmout, xonxoff=0, rtscts=1, dsrdtr=0)
         if self.ser == None:
             print 'Unable to open serial device %s' % cport
