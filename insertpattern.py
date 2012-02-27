@@ -175,11 +175,18 @@ endaddr = 0x6df
 
 beginaddr = thePattern["pattend"]
 endaddr = beginaddr + bytesForMemo(height) + len(pattmem)
-#print "beginning will be at ", hex(beginaddr), "end at", hex(endaddr)
+print "beginning will be at ", hex(beginaddr), "end at", hex(endaddr)
+
+# Note - It's note certain that in all cases this collision test is needed. What's happening
+# when you write below this address (as the pattern grows downward in memory) in that you begin
+# to overwrite the pattern index data that starts at low memory. Since you overwrite the info
+# for highest memory numbers first, you may be able to get away with it as long as you don't
+# attempt to use higher memories.
+# Steve
 
 if beginaddr <= 0x2B8:
-    print "sorry, this will collide with the pattern entry data!"
-    exit
+    print "sorry, this will collide with the pattern entry data since %s is <= 0x2B8!" % hex(beginaddr)
+    #exit
 
 # write the memo and pattern entry from the -end- to the -beginning- (up!)
 for i in range(len(memoentry)):
