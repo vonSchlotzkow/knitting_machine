@@ -236,7 +236,7 @@ int main (int argc, char *argv[]) {
 	unsigned char afterfirst1[13];
 	unsigned char variations;
 	unsigned char afterfirst2[8];
-	unsigned short neetles2[NEEDLELEN];
+	unsigned short needles2[NEEDLELEN];
 	unsigned char tail1[186];
 	unsigned char selector[1];
 	unsigned char selfiller;
@@ -289,18 +289,17 @@ int main (int argc, char *argv[]) {
 	    ival = (pptr->num_h * 100) + (pptr->num_t * 10) + (pptr->num_o);
 	    printf("Status   0x%02X (%d)\n", pptr->status, pptr->status);
 	    printf("  Pgm Number: % 3d\n", ival);
-	    //printf("  Unk nibble: % 3d\n", pptr->unk);
+	    printf("  Unk nibble: % 3d\n", pptr->unk);
 	    printf("    unk1        0x%02X (%d)\n", pptr->unk1, pptr->unk1);
 	    ival = (pptr->rows_h * 100) + (pptr->rows_t * 10) + (pptr->rows_o);
-	    //printf("    Rows:     % 3d\n", ival);
+	    printf("    Rows:     % 3d\n", ival);
 	    ival = (pptr->stitches_h * 100) + (pptr->stitches_t * 10) + (pptr->stitches_o);
-	    //printf("    Stitches: % 3d\n", ival);
+	    printf("    Stitches: % 3d\n", ival);
 
 	    printf("--------\n");
 	}
     }
 
-/*
     printf("===== head =====\n");
     hex_dump(bd.head, sizeof(bd.head));
 
@@ -326,8 +325,8 @@ int main (int argc, char *argv[]) {
 	printf("KHC ");
     if (bd.variations & VAR_KRC)
 	printf("KRC ");
-    if (bd.variations & VAR_UNK)
-	printf("UNKNOWN ");
+    //if (bd.variations & VAR_UNK)
+    //printf("UNKNOWN ");
     printf("\n");
 
     printf("===== afterfirst2 =====\n");
@@ -449,5 +448,4 @@ int main (int argc, char *argv[]) {
 	printf("Selector One pattern start is position %3d Right\n", selone_pos);
     else
 	printf("Selector One pattern start is position %3d Left\n", selone_pos);
-*/
 }

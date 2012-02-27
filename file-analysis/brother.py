@@ -128,7 +128,7 @@ class brotherFile(object):
         """
         self.data = []
         for i in range(2048):
-            self.data.append(char0))
+            self.data.append(char(0))
         # make this look like cleared memory in the KM
         self.data[0x0005] = 0x09
         self.data[0x0006] = 0x01
