@@ -22,41 +22,10 @@ import brother
 import Image
 import array
 
+# import convenience functions from brother module
+from brother import roundeven, roundfour, roundeight, nibblesPerRow, bytesPerPattern, bytesForMemo
+
 TheImage = None
-
-##################
-
-def roundeven(val):
-    return (val+(val%2))
-
-def roundeight(val):
-    if val % 8:
-        return val + (8-(val%8))
-    else:
-        return val
-
-def roundfour(val):
-    if val % 4:
-        return val + (4-(val%4))
-    else:
-        return val
-
-def nibblesPerRow(stitches):
-    # there are four stitches per nibble
-    # each row is nibble aligned
-    return(roundfour(stitches)/4)
-
-def bytesPerPattern(stitches, rows):
-    nibbs = rows * nibblesPerRow(stitches)
-    bytes = roundeven(nibbs)/2
-    return bytes
-
-def bytesForMemo(rows):
-    bytes = roundeven(rows)/2
-    return bytes
-
-##############
-
 
 version = '1.0'
 
