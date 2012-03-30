@@ -159,13 +159,19 @@ else:
     else:
         stitches = pats[0]["stitches"]
         rows = pats[0]["rows"]
-        print '%3d Stitches, %3d Rows' % (stitches, rows)
+        title='%3d Stitches, %3d Rows' % (stitches, rows)
+        print(title)
         pattern = bf.getPattern(patt)
-        for row in range(rows):
-            for stitch in range(stitches):
-                if(pattern[row][stitch]) == 0:
-                    print ' ',
-                else:
-                    print '*',
-            print
-
+        try:
+            import pylab
+            pylab.imshow(pattern, interpolation='nearest', cmap=pylab.matplotlib.cm.gray_r)
+            pylab.title(title)
+            pylab.show()
+        except ImportError:
+            for row in range(rows):
+                for stitch in range(stitches):
+                    if(pattern[row][stitch]) == 0:
+                        print ' ',
+                    else:
+                        print '*',
+                print
