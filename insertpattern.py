@@ -73,7 +73,7 @@ x = 0
 y = 0
 
 x = width - 1
-while x > 0:
+while x >= 0:
     value = TheImage.getpixel((x,y))
     if value:
         sys.stdout.write('* ')
@@ -81,7 +81,7 @@ while x > 0:
         sys.stdout.write('  ')
     #sys.stdout.write(str(value))
     x = x-1
-    if x == 0: #did we hit the end of the line?
+    if x < 0: #did we hit the end of the line?
         y = y+1
         x = width - 1
         print " "
