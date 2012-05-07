@@ -96,42 +96,47 @@ memoentry = []
 for i in range(bytesForMemo(height)):
     memoentry.append(0x0)
 
+def image2nibblestream(I):
+    width,height=I.size
+    pattmemnibs = []
+    for r in range(height):
+        row = []  # we'll chunk in bits and then put em into nibbles
+        for s in range(width):
+            value = I.getpixel((width-s-1,height-r-1))
+            if (value != 0):
+                row.append(1)
+            else:
+                row.append(0)
+        #print row
+        # turn it into nibz
+        for s in range(roundfour(width) / 4):
+            n = 0
+            for nibs in range(4):
+                #print "row size = ", len(row), "index = ",s*4+nibs
+
+                if (len(row) == (s*4+nibs)):
+                    break       # padding!
+
+                if (row[s*4 + nibs]):
+                    n |= 1 << nibs
+            pattmemnibs.append(n)
+            #print hex(n),
+
+
+    if (len(pattmemnibs) % 2):
+        # odd nibbles, buffer to a byte
+        pattmemnibs.append(0x0)
+
+    #print len(pattmemnibs), "nibbles of data"
+
+    # turn into bytes
+    pattmem = []
+    for i in range (len(pattmemnibs) / 2):
+        pattmem.append( pattmemnibs[i*2] | (pattmemnibs[i*2 + 1] << 4))
+    return pattmem
+
 # now for actual real live pattern data!
-pattmemnibs = []
-for r in range(height):
-    row = []  # we'll chunk in bits and then put em into nibbles
-    for s in range(width):
-        value = TheImage.getpixel((width-s-1,height-r-1))
-        if (value != 0):
-            row.append(1)
-        else:
-            row.append(0)
-    #print row
-    # turn it into nibz
-    for s in range(roundfour(width) / 4):
-        n = 0
-        for nibs in range(4):
-            #print "row size = ", len(row), "index = ",s*4+nibs
-
-            if (len(row) == (s*4+nibs)):
-                break       # padding!
-            
-            if (row[s*4 + nibs]):
-                n |= 1 << nibs
-        pattmemnibs.append(n)
-        #print hex(n),
-
-
-if (len(pattmemnibs) % 2):
-    # odd nibbles, buffer to a byte
-    pattmemnibs.append(0x0)
-
-#print len(pattmemnibs), "nibbles of data"
-
-# turn into bytes
-pattmem = []
-for i in range (len(pattmemnibs) / 2):
-    pattmem.append( pattmemnibs[i*2] | (pattmemnibs[i*2 + 1] << 4))
+pattmem = image2nibblestream(TheImage)
 
 #print map(hex, pattmem)
 # whew. 
