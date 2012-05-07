@@ -306,7 +306,27 @@ class brotherFile(object):
         in memory are stored with the beginning of the
         pattern at the highest memory address.
         """
-
+        pattern = self.getPattern(patternNumber)
+        if pattern == None:
+            return None
+        rows = len(pattern)
+        stitches = len(pattern[0])
+        title='%3d Stitches, %3d Rows' % (stitches, rows)
+        print(title)
+        try:
+            import pylab
+            pylab.imshow(pattern, interpolation='nearest', cmap=pylab.matplotlib.cm.gray_r)
+            pylab.title(title)
+            pylab.show()
+        except ImportError:
+            # no pylab available, fall back to textmode bitmap dump
+            for row in range(rows):
+                for stitch in range(stitches):
+                    if(pattern[row][stitch]) == 0:
+                        print ' ',
+                    else:
+                        print '*',
+                print
         return
 
     def rowNumber(self):
