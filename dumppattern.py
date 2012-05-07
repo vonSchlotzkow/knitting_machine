@@ -157,21 +157,4 @@ else:
     if len(pats) == 0:
         print 'pattern %d not found' % patt
     else:
-        stitches = pats[0]["stitches"]
-        rows = pats[0]["rows"]
-        title='%3d Stitches, %3d Rows' % (stitches, rows)
-        print(title)
-        pattern = bf.getPattern(patt)
-        try:
-            import pylab
-            pylab.imshow(pattern, interpolation='nearest', cmap=pylab.matplotlib.cm.gray_r)
-            pylab.title(title)
-            pylab.show()
-        except ImportError:
-            for row in range(rows):
-                for stitch in range(stitches):
-                    if(pattern[row][stitch]) == 0:
-                        print ' ',
-                    else:
-                        print '*',
-                print
+        bf.displayPattern(patt)
